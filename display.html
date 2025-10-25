@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Display Panel — Lucky 3 Queue</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="display-bg">
+  <header class="display-header">
+    <div>
+      <h1>Lucky 3 Lending Corporation</h1>
+      <h3 id="serviceBanner">All Services</h3>
+    </div>
+    <div class="brand">L3</div>
+  </header>
+
+  <main class="display-main">
+    <div class="now-serving-card elevated">
+      <div class="label">Now Serving</div>
+      <div id="nowNumber" class="big-number animate">--</div>
+      <div id="nowService" class="service-label">-</div>
+    </div>
+
+    <aside class="next-list elevated">
+      <h4>Up Next</h4>
+      <ul id="nextList" class="next-ul"></ul>
+      <div class="controls-row">
+        <button id="ttsToggle" class="btn">Audio: On</button>
+        <button id="refreshBtn" class="btn subtle">Refresh</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="display-footer">
+    <div id="stats" class="muted">Waiting: 0 • Serving: 0</div>
+  </footer>
+
+  <script>
+    let audioEnabled = true;
+    const nowNumber = document.getElementById('nowNumber');
+    const nowService = document.getElementById('nowService');
+    const nextList = document.getElementById('nextList');
+    const stats = document.getElementById('stats');
+    const serviceBanner = document.getElementById('serviceBanner');
+    const ttsToggle = document.getElementById('ttsToggle');
+
+    function loadState() {
+      return JSON.parse(localStorage.getItem('lucky3_state') || '{}');
+    }
+
+    function chooseNextToServe() {
+      const s = loadState();
+      if (!s.queue) s.queue = [];
+      let serving = s.queue.find(q => q.status === 'serving') || s.queue.find(q => q.status === 'called') || null;
+      const waiting = s.queue.filter(q => q.status === 'waiting').slice(0, 6);
+      return { serving, waiting, raw: s.queue || [] };
+    }
+
+    function render() {
+      const { serving, waiting, raw } = chooseNextToServe();
+      if (serving) {
+        nowNumber.textContent = serving.display_number;
+        nowNumber.style.color = (serving.service_id && (loadState().serviceDefs || {})[serving.service_id]?.color) || '#fff';
+        nowService.innerHTML = `<span class="badge" style="background:${(loadState().serviceDefs || {})[serving.service_id]?.color || '#fff'}">${serving.service_code}</span> ${((loadState().serviceDefs || {})[serving.service_id]?.name) || ''}`;
+      } else {
+        nowNumber.textContent = '--';
+        nowNumber.style.color = '#fff';
+        nowService.textContent = 'No one being served';
+      }
+      nextList.innerHTML = '';
+      waiting.forEach(q => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="next-number">${q.display_number}</div><div class="muted small">${q.service_code}</div>`;
+        nextList.appendChild(li);
+      });
+      stats.textContent = `Waiting: ${raw.filter(x=>x.status==='waiting').length} • Serving: ${raw.filter(x=>x.status==='serving' || x.status==='called').length}`;
+    }
+
+    function speakAnnouncement(text) {
+      if (!audioEnabled) return;
+      if (!('speechSynthesis' in window)) return;
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-PH';
+      msg.rate = 0.95;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(msg);
+    }
+
+    window.addEventListener('storage', (e) => {
+      // if announcements were added, announce the latest
+      const s = loadState();
+      if (s.announcements && s.announcements.length) {
+        const last = s.announcements[s.announcements.length - 1];
+        speakAnnouncement(last.text);
+      }
+      render();
+    });
+
+    ttsToggle.addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      ttsToggle.textContent = audioEnabled ? 'Audio: On' : 'Audio: Off';
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', render);
+
+    render();
+    setInterval(render, 1200);
+  </script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Kiosk — Lucky 3 Queue</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar kiosk-top">
+    <div class="top-left">
+      <div class="logo-circle">L3</div>
+      <div>
+        <h2 style="margin: 0; font-size: 22px;">Kiosk</h2>
+        <div class="muted">Issue a ticket for your service</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container kiosk-grid">
+    <section class="card">
+      <h3>🎫 Get Your Queue Ticket</h3>
+      
+      <label for="service">Select Service</label>
+      <select id="service" aria-label="Service selection">
+        <option value="svc-001">GSIS Services</option>
+        <option value="svc-002">SSS Services</option>
+        <option value="svc-003">Senior Loan</option>
+      </select>
+
+      <label for="account">Account No. (optional)</label>
+      <input id="account" placeholder="ACC-1001 or leave blank for walk-in" />
+
+      <label for="name">Name (optional)</label>
+      <input id="name" placeholder="Juan dela Cruz" />
+
+      <div class="row">
+        <button id="issueBtn" class="btn big primary" style="flex: 2;">
+          🎫 Get Ticket
+        </button>
+        <button id="clearBtn" class="btn big" style="flex: 1;">
+          🗑️ Clear
+        </button>
+      </div>
+
+      <div id="ticketArea" class="ticket-area" aria-live="polite"></div>
+    </section>
+
+    <aside class="card small">
+      <h4 class="section-title">📋 Last Issued</h4>
+      <ul id="recentList" class="list compact"></ul>
+
+      <hr class="sep" />
+
+      <div class="small muted" style="font-weight: 600; margin-bottom: 12px;">📊 Waiting by Service</div>
+      <ul id="byService" class="list compact"></ul>
+    </aside>
+  </main>
+
+  <script>
+    // Apply saved background
+    const savedBg = localStorage.getItem('lucky3_bg_image');
+    if (savedBg) {
+      document.body.style.backgroundImage = `url('${savedBg}')`;
+      document.body.classList.add('has-bg-image');
+    }
+
+    const SERVICES = {
+      "svc-001": { code: "GSIS", name: "GSIS Services", color: "#2B8A9E" },
+      "svc-002": { code: "SSS", name: "SSS Services", color: "#D97A66" },
+      "svc-003": { code: "SENIOR_LOAN", name: "Senior Loan", color: "#6C8F6E" }
+    };
+
+    function loadState() {
+      const state = JSON.parse(localStorage.getItem('lucky3_state') || '{}');
+      if (!state.nextNumber) state.nextNumber = 1;
+      if (!state.queue) state.queue = [];
+      if (!state.serviceDefs) state.serviceDefs = SERVICES;
+      return state;
+    }
+    function saveState(s) { localStorage.setItem('lucky3_state', JSON.stringify(s)); }
+
+    const state = loadState();
+    const serviceEl = document.getElementById('service');
+    const accountEl = document.getElementById('account');
+    const nameEl = document.getElementById('name');
+    const ticketArea = document.getElementById('ticketArea');
+    const recentList = document.getElementById('recentList');
+    const byService = document.getElementById('byService');
+
+    function renderRecent() {
+      recentList.innerHTML = '';
+      const last = state.queue.slice(-8).reverse();
+      if (last.length === 0) {
+        recentList.innerHTML = '<li style="padding:14px;color:#6b7280;text-align:center;">No tickets issued yet</li>';
+        return;
+      }
+      last.forEach(q => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong style="color:${SERVICES[q.service_id]?.color || '#333'}">${q.display_number}</strong> <span class="muted">• ${q.service_code}</span><div class="tiny muted">${q.client_name || 'Walk-in'}</div>`;
+        recentList.appendChild(li);
+      });
+    }
+
+    function renderByService() {
+      const counts = {};
+      (state.queue || []).forEach(q => {
+        counts[q.service_code] = (counts[q.service_code] || 0) + (q.status === 'waiting' ? 1 : 0);
+      });
+      byService.innerHTML = '';
+      Object.keys(SERVICES).forEach(sid => {
+        const svc = SERVICES[sid];
+        const li = document.createElement('li');
+        li.innerHTML = `<span class="badge" style="background:${svc.color}">${svc.code}</span> ${svc.name} <span class="muted">• ${counts[svc.code] || 0} waiting</span>`;
+        byService.appendChild(li);
+      });
+    }
+
+    function showTicket(ticket) {
+      ticketArea.innerHTML = `
+        <div class="ticket big-ticket" style="animation: fadeIn 0.5s ease;">
+          <div class="ticket-header">Lucky 3 Lending Corporation</div>
+          <div class="ticket-number" style="color:${SERVICES[ticket.service_id].color}">${ticket.display_number}</div>
+          <div class="ticket-service"><span class="badge" style="background:${SERVICES[ticket.service_id].color}">${ticket.service_code}</span> ${SERVICES[ticket.service_id].name}</div>
+          <div class="ticket-meta">${ticket.client_name || 'Walk-in'} ${ticket.account_no ? '• ' + ticket.account_no : ''}</div>
+          <div class="ticket-footer">Issued: ${new Date(ticket.issued_at).toLocaleString()}</div>
+          <div style="margin-top: 16px; padding: 12px; background: rgba(16,185,129,0.1); border-radius: 8px; color: #10b981; font-weight: 600;">
+            ✅ Ticket issued successfully!
+          </div>
+        </div>`;
+    }
+
+    function issueTicket() {
+      const serviceId = serviceEl.value;
+      const svc = SERVICES[serviceId];
+      const numeric = state.nextNumber++;
+      const display_number = `L3-${numeric}`;
+      const client_name = nameEl.value.trim() || '';
+      const account_no = accountEl.value.trim() || '';
+      const now = new Date().toISOString();
+
+      const ticket = {
+        queue_id: `q-${String(numeric).padStart(5,'0')}`,
+        numeric,
+        display_number,
+        service_id: serviceId,
+        service_code: svc.code,
+        client_name,
+        account_no,
+        issued_at: now,
+        status: "waiting",
+        called_count: 0
+      };
+      state.queue.push(ticket);
+      saveState(state);
+
+      showTicket(ticket);
+      renderRecent();
+      renderByService();
+
+      window.dispatchEvent(new Event('storage'));
+    }
+
+    document.getElementById('issueBtn').addEventListener('click', issueTicket);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      serviceEl.selectedIndex = 0; 
+      accountEl.value=''; 
+      nameEl.value=''; 
+      ticketArea.innerHTML='';
+    });
+
+    renderRecent();
+    renderByService();
+    
+    // Auto-refresh stats
+    setInterval(() => {
+      renderByService();
+    }, 2000);
+  </script>
+
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</body>
+</html>

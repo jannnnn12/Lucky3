@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lucky 3 Queue — Enhanced System</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* You can set a custom background image here */
+    body {
+      background-image: url('img/bank.jpg');
+    }
+  </style>
+</head>
+<body>
+  <main class="centered">
+    <div class="hero">
+      <div class="logo-block">
+        <div class="logo">L3</div>
+        <div class="brand-text">
+          <h1>Lucky 3 Lending</h1>
+          <p class="tag">Enhanced Queue Management System</p>
+        </div>
+      </div>
+      <p class="lead">Modern, interactive queue management with real-time updates.<br>Kiosk, Display Panel, and Admin Dashboard — all in one system.</p>
+      
+    
+      
+      <div class="links">
+        <a class="btn primary" href="kiosk.html" target="_blank">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+          </svg>
+          Kiosk — Issue Ticket
+        </a>
+        <a class="btn" href="display.html" target="_blank">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"/>
+          </svg>
+          Display Panel
+        </a>
+        <a class="btn" href="admin-dashboard.html" target="_blank">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+          </svg>
+          Admin Dashboard
+        </a>
+      </div>
+      <small class="hint">💡 Tip: Open Display and Admin in separate windows to simulate a multi-screen environment.</small>
+    </div>
+  </main>
+
+  <script>
+    // Background customizer
+    const bgInput = document.getElementById('bgInput');
+    const applyBg = document.getElementById('applyBg');
+    const removeBg = document.getElementById('removeBg');
+
+    // Load saved background
+    const savedBg = localStorage.getItem('lucky3_bg_image');
+    if (savedBg) {
+      document.body.style.backgroundImage = `url('${savedBg}')`;
+      document.body.classList.add('has-bg-image');
+      bgInput.value = savedBg;
+    }
+
+    applyBg.addEventListener('click', () => {
+      const url = bgInput.value.trim();
+      if (url) {
+        document.body.style.backgroundImage = `url('${url}')`;
+        document.body.classList.add('has-bg-image');
+        localStorage.setItem('lucky3_bg_image', url);
+        alert('✅ Background applied! This will be used across all pages.');
+      }
+    });
+
+    removeBg.addEventListener('click', () => {
+      document.body.style.backgroundImage = '';
+      document.body.classList.remove('has-bg-image');
+      localStorage.removeItem('lucky3_bg_image');
+      bgInput.value = '';
+      alert('✅ Background removed!');
+    });
+  </script>
+</body>
+</html>

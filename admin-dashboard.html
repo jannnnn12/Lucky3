@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Dashboard — Lucky 3 Queue</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">
+      <div class="logo-circle small">L3</div>
+      <div>
+        <h2 style="margin: 0; font-size: 20px;">Admin Dashboard</h2>
+        <div class="muted">Logged in: admin-001 • Desk-1</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="muted small">⌨️ Keyboard: ↑ ↓ to navigate, Enter to select, C = Call</div>
+    </div>
+  </header>
+
+  <main class="container grid-2">
+    <section class="card">
+      <h3>📋 Queue (Waiting)</h3>
+      <ul id="queueList" class="queue-list" tabindex="0" aria-label="Waiting queue list"></ul>
+    </section>
+
+    <section class="card">
+      <h3>🎛️ Controls</h3>
+      <div class="controls-col">
+        <button id="callBtn" class="btn primary">
+          📞 Call Selected (C)
+        </button>
+        <button id="serveBtn" class="btn">
+          ✅ Mark Served
+        </button>
+        <button id="skipBtn" class="btn warn">
+          ⏭️ Skip Selected
+        </button>
+        <button id="recallBtn" class="btn">
+          🔁 Recall
+        </button>
+      </div>
+
+      <hr class="sep" />
+
+      <div class="controls-col">
+        <button id="resetBtn" class="btn" style="background:#e74c3c;color:#fff;border:0;width:100%">
+          ⚠️ Reset All Data
+        </button>
+      </div>
+
+      <h4>📊 Service History (preview)</h4>
+      <div id="historyArea" class="history-area">Select a served item to see history.</div>
+    </section>
+  </main>
+
+  <script>
+    // Apply saved background
+    const savedBg = localStorage.getItem('lucky3_bg_image');
+    if (savedBg) {
+      document.body.style.backgroundImage = `url('${savedBg}')`;
+      document.body.classList.add('has-bg-image');
+    }
+
+    function loadState() { return JSON.parse(localStorage.getItem('lucky3_state') || '{}'); }
+    function saveState(s) { localStorage.setItem('lucky3_state', JSON.stringify(s)); window.dispatchEvent(new Event('storage')); }
+
+    const queueList = document.getElementById('queueList');
+    const callBtn = document.getElementById('callBtn');
+    const serveBtn = document.getElementById('serveBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const recallBtn = document.getElementById('recallBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const historyArea = document.getElementById('historyArea');
+
+    function setSelectedQueueId(id) { sessionStorage.setItem('lucky3_selected_qid', id || ''); }
+    function getSelectedQueueId() { return sessionStorage.getItem('lucky3_selected_qid') || ''; }
+
+    queueList.addEventListener('click', (e) => {
+      const li = e.target.closest('.queue-item');
+      if (!li) return;
+      const qid = li.dataset.qid;
+      document.querySelectorAll('.queue-item.selected').forEach(n => n.classList.remove('selected'));
+      li.classList.add('selected');
+      setSelectedQueueId(qid);
+    });
+
+    // keyboard navigation
+    queueList.addEventListener('keydown', (e) => {
+      const items = Array.from(document.querySelectorAll('.queue-item'));
+      if (!items.length) return;
+      const selected = document.querySelector('.queue-item.selected');
+      let index = Math.max(0, items.indexOf(selected));
+      if (e.key === 'ArrowDown') { index = Math.min(items.length - 1, index + 1); items[index].click(); items[index].focus(); e.preventDefault(); }
+      if (e.key === 'ArrowUp') { index = Math.max(0, index - 1); items[index].click(); items[index].focus(); e.preventDefault(); }
+      if (e.key === 'Enter') { document.activeElement.click(); e.preventDefault(); }
+      if (e.key.toLowerCase() === 'c') { callSelected(); e.preventDefault(); }
+    });
+
+    function renderQueue() {
+      const s = loadState();
+      queueList.innerHTML = '';
+      const waiting = (s.queue || []).filter(q => q.status === 'waiting');
+      const selectedId = getSelectedQueueId();
+      
+      if (waiting.length === 0) {
+        queueList.innerHTML = '<li style="padding:20px;text-align:center;color:#6b7280">No tickets waiting in queue</li>';
+        return;
+      }
+      
+      waiting.forEach(q => {
+        const li = document.createElement('li');
+        li.className = 'queue-item';
+        li.dataset.qid = q.queue_id;
+        li.tabIndex = 0;
+        li.innerHTML = `<div class="queue-row"><div class="num">${q.display_number}</div><div class="meta"><div class="muted small"><strong>${q.service_code}</strong></div><div class="tiny muted">${q.client_name || 'Walk-in'}</div></div></div>`;
+        if (q.queue_id === selectedId) li.classList.add('selected');
+        queueList.appendChild(li);
+      });
+    }
+
+    function getSelectedQueue() {
+      const selectedId = getSelectedQueueId();
+      const s = loadState();
+      if (selectedId) return (s.queue || []).find(x => x.queue_id === selectedId);
+      const el = document.querySelector('.queue-item.selected');
+      if (!el) return null;
+      return (s.queue || []).find(x => x.queue_id === el.dataset.qid);
+    }
+
+    function callSelected() {
+      const q = getSelectedQueue();
+      if (!q) { alert('⚠️ Select a waiting ticket'); return; }
+      const s = loadState();
+      const target = (s.queue || []).find(x => x.queue_id === q.queue_id);
+      if (!target) { alert('⚠️ Ticket not found'); setSelectedQueueId(''); renderQueue(); return; }
+      target.status = 'called';
+      target.called_count = (target.called_count || 0) + 1;
+      target.last_called_at = new Date().toISOString();
+      target.desk = 'Desk-1';
+      s.announcements = s.announcements || [];
+      const text = `Now serving number ${target.display_number} for ${target.service_code} services`;
+      s.announcements.push({ announcement_id: 'a-' + Date.now(), queue_id: target.queue_id, text, announced_at: new Date().toISOString() });
+      saveState(s);
+      setSelectedQueueId('');
+      renderQueue();
+    }
+
+    function markServed() {
+      const s = loadState();
+      const called = (s.queue || []).find(q => q.status === 'called' && q.desk === 'Desk-1');
+      if (!called) { alert('⚠️ No called ticket on this desk'); return; }
+      called.status = 'served';
+      s.service_histories = s.service_histories || [];
+      s.service_histories.push({
+        history_id: 'h-' + Date.now(),
+        client_name: called.client_name || '',
+        client_account: called.account_no || '',
+        queue_id: called.queue_id,
+        service_id: called.service_id,
+        service_code: called.service_code,
+        visit_date: new Date().toISOString(),
+        transaction_type: called.service_code,
+        outcome: 'Completed',
+        served_by_admin_id: 'admin-001',
+        service_duration_seconds: 300,
+        notes: ''
+      });
+      saveState(s);
+      renderQueue();
+      renderHistoryPreview();
+    }
+
+    function skipSelected() {
+      const q = getSelectedQueue();
+      if (!q) { alert('⚠️ Select a waiting ticket to skip'); return; }
+      const s = loadState();
+      const target = (s.queue || []).find(x => x.queue_id === q.queue_id);
+      if (!target) { alert('⚠️ Ticket not found'); setSelectedQueueId(''); renderQueue(); return; }
+      target.status = 'skipped';
+      saveState(s);
+      setSelectedQueueId('');
+      renderQueue();
+    }
+
+    function recallSelected() {
+      const s = loadState();
+      const lastCalled = (s.queue || []).filter(q => q.status === 'called' && q.desk === 'Desk-1').slice(-1)[0];
+      if (!lastCalled) { alert('⚠️ No called ticket to recall for this desk'); return; }
+      lastCalled.called_count = (lastCalled.called_count || 1) + 1;
+      lastCalled.last_called_at = new Date().toISOString();
+      s.announcements = s.announcements || [];
+      s.announcements.push({ announcement_id: 'a-' + Date.now(), queue_id: lastCalled.queue_id, text: `Final call for ${lastCalled.display_number}`, announced_at: new Date().toISOString() });
+      saveState(s);
+    }
+
+    function renderHistoryPreview() {
+      const s = loadState();
+      const latest = (s.service_histories || []).slice(-6).reverse();
+      if (!latest.length) { historyArea.textContent = 'No service history yet.'; return; }
+      historyArea.innerHTML = latest.map(h => `<div class="history-item"><strong>${h.service_code || h.transaction_type}</strong><div class="muted tiny">${new Date(h.visit_date).toLocaleString()} • ${h.client_name || h.client_account || 'Walk-in'}</div></div>`).join('');
+    }
+
+    function resetAllData() {
+      if (!confirm('⚠️ WARNING: This will delete ALL queue data, service history, and announcements.\n\nThis action cannot be undone!\n\nAre you sure you want to reset everything?')) {
+        return;
+      }
+      
+      if (!confirm('🔴 FINAL CONFIRMATION: Delete all data and reset to empty state?')) {
+        return;
+      }
+
+      localStorage.removeItem('lucky3_state');
+      sessionStorage.clear();
+      
+      window.dispatchEvent(new Event('storage'));
+      
+      renderQueue();
+      renderHistoryPreview();
+      
+      alert('✅ All data has been reset successfully!');
+    }
+
+    callBtn.addEventListener('click', callSelected);
+    serveBtn.addEventListener('click', markServed);
+    skipBtn.addEventListener('click', skipSelected);
+    recallBtn.addEventListener('click', recallSelected);
+    resetBtn.addEventListener('click', resetAllData);
+
+    window.addEventListener('storage', () => {
+      renderQueue();
+      renderHistoryPreview();
+    });
+
+    renderQueue();
+    renderHistoryPreview();
+    setInterval(renderQueue, 1200);
+  </script>
+</body>
+</html>

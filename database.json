@@ -1,0 +1,290 @@
+{
+  "capstone_title": "Enhanced Queue Management System with Service History Tracking for Lucky 3 Lending Corporation to Address Long Waiting Times.",
+  "version": "1.1",
+  "settings": {
+    "autoQueuePrefix": "L3-",
+    "startingNumber": 1,
+    "maxConcurrentServing": 4,
+    "timeZone": "UTC",
+    "retention_days_service_history": 3650,
+    "audio": {
+      "enabled": true,
+      "language": "en-PH",
+      "volume": 0.8,
+      "announcement_template": "Now serving number {queue_display}"
+    }
+  },
+  "services": [
+    {
+      "service_id": "svc-001",
+      "code": "GSIS",
+      "name": "GSIS Services",
+      "description": "Government Service Insurance System related loan inquiries, processing, and document handling.",
+      "default_service_duration_seconds": 900
+    },
+    {
+      "service_id": "svc-002",
+      "code": "SSS",
+      "name": "SSS Services",
+      "description": "Social Security System transactions such as contributions, loan payments, and inquiries.",
+      "default_service_duration_seconds": 600
+    },
+    {
+      "service_id": "svc-003",
+      "code": "SENIOR_LOAN",
+      "name": "Senior Loan",
+      "description": "Senior (special) loan applications and servicing handled under Lucky 3 Lending's senior loan product.",
+      "default_service_duration_seconds": 1200
+    }
+  ],
+  "clients": [
+    {
+      "client_id": "c1d9f9a2-1a8b-4c3f-bd42-000000000001",
+      "account_no": "ACC-1001",
+      "first_name": "Maria",
+      "last_name": "Santos",
+      "phone": "+639171234567",
+      "email": "maria.santos@example.com",
+      "date_of_birth": "1985-04-18",
+      "created_at": "2025-10-23T08:30:00Z",
+      "notes": "VIP client - prefers quick servicing"
+    },
+    {
+      "client_id": "d2e8b0c3-2b7c-4a5e-bd42-000000000002",
+      "account_no": "ACC-1002",
+      "first_name": "Juan",
+      "last_name": "Dela Cruz",
+      "phone": "+639181234567",
+      "email": "juan.delacruz@example.com",
+      "date_of_birth": "1990-11-05",
+      "created_at": "2025-06-12T09:45:00Z",
+      "notes": ""
+    },
+    {
+      "client_id": "e3f7a1b4-3c9d-4b6f-bd42-000000000003",
+      "account_no": "ACC-1003",
+      "first_name": "Lola",
+      "last_name": "Garcia",
+      "phone": "+639199999999",
+      "email": "lola.garcia@example.com",
+      "date_of_birth": "1955-03-02",
+      "created_at": "2025-09-02T11:00:00Z",
+      "notes": "Senior loan prospect"
+    }
+  ],
+  "queue": [
+    {
+      "queue_id": "q-00015",
+      "display_number": "L3-15",
+      "numeric": 15,
+      "client_id": "c1d9f9a2-1a8b-4c3f-bd42-000000000001",
+      "service_id": "svc-003",
+      "service_code": "SENIOR_LOAN",
+      "issued_at": "2025-10-23T08:45:12Z",
+      "status": "waiting",
+      "priority": "vip",
+      "desk": null,
+      "called_count": 0,
+      "last_called_at": null,
+      "notes": "Senior loan application - bring ID and proof of income"
+    },
+    {
+      "queue_id": "q-00016",
+      "display_number": "L3-16",
+      "numeric": 16,
+      "client_id": "d2e8b0c3-2b7c-4a5e-bd42-000000000002",
+      "service_id": "svc-002",
+      "service_code": "SSS",
+      "issued_at": "2025-10-23T08:47:01Z",
+      "status": "called",
+      "priority": "normal",
+      "desk": "Desk-2",
+      "called_count": 1,
+      "last_called_at": "2025-10-23T09:10:05Z",
+      "notes": "SSS contribution update"
+    },
+    {
+      "queue_id": "q-00017",
+      "display_number": "L3-17",
+      "numeric": 17,
+      "client_id": "e3f7a1b4-3c9d-4b6f-bd42-000000000003",
+      "service_id": "svc-003",
+      "service_code": "SENIOR_LOAN",
+      "issued_at": "2025-10-23T08:55:00Z",
+      "status": "waiting",
+      "priority": "walk-in",
+      "desk": null,
+      "called_count": 0,
+      "last_called_at": null,
+      "notes": "Senior loan consultation"
+    },
+    {
+      "queue_id": "q-00018",
+      "display_number": "L3-18",
+      "numeric": 18,
+      "client_id": null,
+      "service_id": "svc-001",
+      "service_code": "GSIS",
+      "issued_at": "2025-10-23T08:58:30Z",
+      "status": "waiting",
+      "priority": "normal",
+      "desk": null,
+      "called_count": 0,
+      "last_called_at": null,
+      "notes": "GSIS loan inquiry (walk-in)"
+    }
+  ],
+  "service_histories": [
+    {
+      "history_id": "h-20251023-0001",
+      "client_id": "c1d9f9a2-1a8b-4c3f-bd42-000000000001",
+      "queue_id": "q-00015",
+      "service_id": "svc-003",
+      "service_code": "SENIOR_LOAN",
+      "visit_date": "2025-10-23T09:12:00Z",
+      "transaction_type": "Senior Loan Application",
+      "loan_amount_requested": 50000,
+      "loan_term_months": 12,
+      "outcome": "In Progress",
+      "served_by_admin_id": "admin-001",
+      "service_duration_seconds": 900,
+      "notes": "Submitted documents, background check pending"
+    },
+    {
+      "history_id": "h-20250612-0001",
+      "client_id": "d2e8b0c3-2b7c-4a5e-bd42-000000000002",
+      "queue_id": "q-00008",
+      "service_id": "svc-002",
+      "service_code": "SSS",
+      "visit_date": "2025-06-12T10:05:00Z",
+      "transaction_type": "SSS Contribution Payment",
+      "payment_amount": 2500,
+      "outcome": "Completed",
+      "served_by_admin_id": "admin-002",
+      "service_duration_seconds": 240,
+      "notes": "Paid on time"
+    },
+    {
+      "history_id": "h-20250902-0001",
+      "client_id": "e3f7a1b4-3c9d-4b6f-bd42-000000000003",
+      "queue_id": "q-00010",
+      "service_id": "svc-001",
+      "service_code": "GSIS",
+      "visit_date": "2025-09-02T11:20:00Z",
+      "transaction_type": "GSIS Loan Inquiry",
+      "outcome": "Advised - return with additional docs",
+      "served_by_admin_id": "admin-002",
+      "service_duration_seconds": 480,
+      "notes": "Client to provide retirement certificate"
+    }
+  ],
+  "admins": [
+    {
+      "admin_id": "admin-001",
+      "username": "desk_maria",
+      "display_name": "Maria (Desk 1)",
+      "role": "clerk",
+      "desk": "Desk-1",
+      "last_active_at": "2025-10-23T09:15:00Z",
+      "permissions": ["call_queue", "skip_queue", "recall_queue", "view_history"]
+    },
+    {
+      "admin_id": "admin-002",
+      "username": "super_john",
+      "display_name": "John (Supervisor)",
+      "role": "supervisor",
+      "desk": null,
+      "last_active_at": "2025-10-23T08:50:00Z",
+      "permissions": ["call_queue", "skip_queue", "recall_queue", "view_history", "edit_history", "manage_admins"]
+    }
+  ],
+  "display_panel": {
+    "panel_id": "panel-01",
+    "current_display_number": "L3-16",
+    "current_numeric": 16,
+    "current_service_code": "SSS",
+    "next_display_numbers": [
+      {
+        "display_number": "L3-17",
+        "numeric": 17,
+        "service_code": "SENIOR_LOAN"
+      },
+      {
+        "display_number": "L3-18",
+        "numeric": 18,
+        "service_code": "GSIS"
+      }
+    ],
+    "last_updated_at": "2025-10-23T09:10:10Z",
+    "branding": {
+      "company_name": "Lucky 3 Lending Corporation",
+      "logo_url": "assets/images/lucky3-logo.png",
+      "theme_color": "#1F7A8C"
+    }
+  },
+  "audio_announcements": {
+    "enabled": true,
+    "last_announcement": {
+      "queue_id": "q-00016",
+      "display_number": "L3-16",
+      "service_code": "SSS",
+      "announced_at": "2025-10-23T09:10:06Z",
+      "message": "Now serving number L3-16 for SSS services"
+    },
+    "history": [
+      {
+        "announcement_id": "a-0001",
+        "queue_id": "q-00016",
+        "display_number": "L3-16",
+        "service_code": "SSS",
+        "announced_at": "2025-10-23T09:10:06Z",
+        "text": "Now serving number L3-16 for SSS services",
+        "method": "tts",
+        "speaker": "en-PH-Standard-A"
+      }
+    ]
+  },
+  "real_time_stats": {
+    "as_of": "2025-10-23T09:12:00Z",
+    "waiting_count": 3,
+    "being_served_count": 1,
+    "average_wait_seconds_last_hour": 720,
+    "average_service_seconds_last_hour": 420,
+    "waiting_by_service": {
+      "GSIS": 1,
+      "SSS": 1,
+      "SENIOR_LOAN": 1
+    }
+  },
+  "audit_logs": [
+    {
+      "log_id": "log-20251023-0001",
+      "source": "admin-001",
+      "action": "call_queue",
+      "target_queue_id": "q-00016",
+      "timestamp": "2025-10-23T09:10:05Z",
+      "metadata": {
+        "desk": "Desk-2",
+        "service_code": "SSS",
+        "announcement_sent": true
+      }
+    },
+    {
+      "log_id": "log-20251023-0002",
+      "source": "system",
+      "action": "auto_generate_queue",
+      "target_queue_id": "q-00017",
+      "timestamp": "2025-10-23T08:55:00Z",
+      "metadata": {
+        "trigger": "kiosk",
+        "kiosk_id": "kiosk-01",
+        "service_code": "SENIOR_LOAN"
+      }
+    }
+  ],
+  "maintenance": {
+    "last_backup_at": "2025-10-23T02:00:00Z",
+    "next_scheduled_backup": "2025-10-24T02:00:00Z",
+    "schema_migration_version": 4
+  
+}}
